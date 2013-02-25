@@ -1,0 +1,125 @@
+#!/bin/bash
+# Show top threads of a java process, accessing the process through JMX.
+# In remote mode it connects through ssh first and then execute the script locally on remote host. Creating an ssh 
+# tunnel instead of sending the executable would be simpler, but less fun ;) Besides, I had a very slow ssh connection
+# to the server and it saved a lot of bandwidth... 
+#aorzecho 2012,2013
+
+ERR_INVALID_ARGS=1
+ERR_NO_JAR=2
+
+TOP=10
+INTERVAL=10000
+PORT=8686
+REMOTE=false
+
+CURR_DIR=`dirname $0`
+JAR=$CURR_DIR/target/jt.jar
+
+COLUMNS=`tput cols`
+[ "x" == "x$COLUMNS" ] && COLUMNS=150
+
+fail () {
+    ERR_CODE=$1
+    shift
+    echo $@
+    exit $ERR_CODE
+}
+
+help () {
+    echo "Show top threads of a java process, accessing the process through JMX. By default connects to localhost:8686"
+    echo "Usage: $0 [-t|-top] [-i|-interval] [-p|-port] [[user@]host]"
+    echo "      -t|--top N          show top N threads, default 10"
+    echo "      -i|-intreval N      refresh every N milliseconds, default 10000"
+    echo "      -p|--port N         JMX port, default 8686"
+    echo "      -f|--stackFilter rgxp         regexp to filter stack trace - shows first matching entry, eg. use com.profitbricks (may need to increase maxStack if not found)"
+    echo "      -m|--maxStack N         number of stack trace elements to load/filter, default 50 if stackFilter is set, 1 otherwise"
+    echo "      -r|--remote             execute remotely, connecting to the host using ssh (useful when JMX port is firewalled or only exposed on localhost)"
+    echo
+}
+
+
+create_script () {
+    echo '#/bin/bash'
+    echo 'TMP_JAR=`mktemp`'
+    echo 'unpack () {'
+    echo 'base64 -d <<END >$1'
+    base64 $JAR
+    echo 'END'
+    echo '}'
+    echo 'unpack $TMP_JAR'
+    echo 'java -jar $TMP_JAR --columns $COLUMNS --top $TOP --interval $INTERVAL $MAXSTACK $STACKFILTER $URL &'
+    echo 'JPID=$!'
+    echo 'trap "kill $JPID; rm -f $TMP_JAR" EXIT'
+    while read -n 1 KEY
+    do
+        [ "xq" == "x$KEY" ] && break
+    done
+}
+
+
+while true
+do
+    case $1 in
+        -t|--top)
+                shift
+                TOP=$1
+                [ "x" != "x$TOP" ] || fail $ERR_INVALID_ARGS "Missing TOP parameter."
+                shift
+            ;;
+        -r|--remote)
+                shift
+                REMOTE=true
+            ;;
+        -i|--interval)
+                shift
+                INTERVAL=$1
+                [ "x" != "x$INTERVAL" ] || fail $ERR_INVALID_ARGS "Missing INTERVAL parameter."
+                shift
+            ;;
+        -p|--port)
+                shift
+                PORT=$1
+                [ "x" != "x$PORT" ] || fail $ERR_INVALID_ARGS "Missing PORT parameter."
+                shift
+            ;;
+        -m|--maxStack)
+                shift
+                [ "x" != "x$1" ] || fail $ERR_INVALID_ARGS "Missing MAXSTACK parameter."
+                MAXSTACK="--maxStack $1"
+                shift
+            ;;
+        -f|--stackFilter)
+                shift
+                [ "x" != "x$1" ] || fail $ERR_INVALID_ARGS "Missing STACKFILTER parameter."
+                STACKFILTER="--stackFilter $1"
+                shift
+            ;;
+        -h|--help)
+                help
+                exit 0
+            ;;
+        * )
+                break;
+            ;;
+    esac
+done
+
+if [ ! -f $JAR ]; then
+    echo "Jar not found - building project..."
+    mvn clean install || fail $ERR_NO_JAR "Unable to build from source - see errors above"
+fi
+
+HOST=${1:-localhost}
+
+if [ $REMOTE == "true" ]
+then
+    # upload and execute jar on remote machine, connecting through local interface
+    URL=localhost:$PORT
+    create_script | ssh $HOST "COLUMNS=$COLUMNS URL=$URL TOP=$TOP INTERVAL=$INTERVAL PORT=$PORT MAXSTACK=\"$MAXSTACK\" STACKFILTER=\"$STACKFILTER\" bash -s"
+else
+    URL=$HOST:$PORT
+    java -jar $JAR --columns $COLUMNS --top $TOP --interval $INTERVAL $MAXSTACK $STACKFILTER $URL
+fi
+
+
