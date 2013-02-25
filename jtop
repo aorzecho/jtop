@@ -32,10 +32,17 @@ help () {
     echo "      -t|--top N          show top N threads, default 10"
     echo "      -i|-intreval N      refresh every N milliseconds, default 10000"
     echo "      -p|--port N         JMX port, default 8686"
-    echo "      -f|--stackFilter rgxp         regexp to filter stack trace - shows first matching entry, eg. use com.profitbricks (may need to increase maxStack if not found)"
-    echo "      -m|--maxStack N         number of stack trace elements to load/filter, default 50 if stackFilter is set, 1 otherwise"
+    echo "      -f|--stackFilter rgxp         regexp to filter stack trace - shows first entry matching the regexp (increase maxStack if not found)"
+    echo "      -m|--maxStack N         number of stack trace elements to load/filter, default 50 if stackFilter is set, 1 otherwise, use less for less overhead"
     echo "      -r|--remote             execute remotely, connecting to the host using ssh (useful when JMX port is firewalled or only exposed on localhost)"
     echo
+    echo "Examples:"
+    echo "  ./jtop --maxStack 0"
+    echo "    connects to localhost:8686, disables stack"
+    echo "  ./jtop --stackFilter 'glassfish|org.felix|org.aorzecho'"
+    echo "    connects to localhost:8686, looks for given keywords in stacktraces"
+    echo "  ./jtop -r aorzecho@myhost"
+    echo "    ssh to myhost as user aorzecho lnd connect to ocalhost:8686 jvm"
 }
 
 
