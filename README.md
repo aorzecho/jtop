@@ -15,12 +15,12 @@ Usage
     $ ./jtop --help
     Show top threads of a java process, accessing the process through JMX. By default connects to localhost:8686
     Usage: ./jtop [-t|-top] [-i|-interval] [-p|-port] [[user@]host]
-          -t|--top N          show top N threads, default 10
-          -i|-intreval N      refresh every N milliseconds, default 10000
-          -p|--port N         JMX port, default 8686
-          -f|--stackFilter rgxp         regexp to filter stack trace - shows first entry matching the regexp (increase maxStack if not found)
-          -m|--maxStack N         number of stack trace elements to load/filter, default 50 if stackFilter is set, 1 otherwise, use less for less overhead
-          -r|--remote             execute remotely, connecting to the host using ssh (useful when JMX port is firewalled or only exposed on localhost)
+          --top N          show top N threads, default 10
+          -intreval N      refresh every N milliseconds, default 10000
+          --port N         JMX port, default 8686
+          --stackFilter rgxp         regexp to filter stack trace - shows first entry matching the regexp (increase maxStack if not found)
+          --maxStack N         number of stack trace elements to load/filter, default 50 if stackFilter is set, 1 otherwise, use less for less overhead
+          --remote             execute remotely, connecting to the host using ssh (useful when JMX port is firewalled or only exposed on localhost)
     
     Examples:
       ./jtop --maxStack 0
