@@ -14,10 +14,9 @@ Usage
 -----
     $ ./jtop --help
     Show top threads of a java process, accessing the process through JMX. By default connects to localhost:8686
-    Usage: ./jtop [-t|-top] [-i|-interval] [-p|-port] [[user@]host]
+    Usage: ./jtop <options> [[user@]host:port]
           --top N          show top N threads, default 10
-          -intreval N      refresh every N milliseconds, default 10000
-          --port N         JMX port, default 8686
+          --interval N     refresh every N milliseconds, default 10000
           --stackFilter rgxp         regexp to filter stack trace - shows first entry matching the regexp (increase maxStack if not found)
           --maxStack N         number of stack trace elements to load/filter, default 50 if stackFilter is set, 1 otherwise, use less for less overhead
           --remote             execute remotely, connecting to the host using ssh (useful when JMX port is firewalled or only exposed on localhost)
@@ -27,6 +26,8 @@ Usage
         connects to localhost:8686, disables stack
       ./jtop --stackFilter 'glassfish|org.felix|org.aorzecho'
         connects to localhost:8686, looks for given keywords in stacktraces
-      ./jtop -r aorzecho@myhost
-        ssh to myhost as user aorzecho lnd connect to ocalhost:8686 jvm
+      ./jtop --top 8 192.168.1.25:9824
+        connects to process via JMX on 192.168.1.25:9824, top 8 threads  
+
+
 

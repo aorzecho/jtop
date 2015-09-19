@@ -53,6 +53,7 @@ public class JT implements Runnable {
                     : res;
         }
     }
+    @SuppressWarnings("unchecked")
     private Map<Long, Stats>[] infos = new HashMap[2];
     private int interval = 5000;
     private String mUrl;
@@ -232,9 +233,19 @@ public class JT implements Runnable {
                 if (jt.maxStack == 1) {
                     jt.setMaxStack(50);
                 }
+            } else {
+		System.out.println("Usage: jtop [--interval N] [--top N] [--maxStack N] [--stackFilter regex] <JMX url>");
+		System.out.println("");
+		System.out.println("Example: jtop --interval 5000 --top 8 192.168.1.20:5401");
+		System.exit(1);
             }
         }
-        String mUrl = args[i];
+        String mUrl;
+        if (i == args.length) {
+           mUrl = "localhost";
+        } else {
+            mUrl = args[i];
+	}
         if (!mUrl.startsWith("service:")) {
             mUrl = new StringBuilder().append("service:jmx:rmi://").append(mUrl).append("/jndi/rmi://").append(mUrl).append("/jmxrmi").toString();
             System.out.println(new StringBuilder().append("Using url ").append(mUrl).toString());
